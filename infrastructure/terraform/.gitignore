@@ -9,10 +9,10 @@ terraform-infrastructure.json
 **/.terraform/*
 
 # .tfstate files
-#*.tfstate
-#*.tfstate.*
-#*.tfstate.backup
-#*.tfstate.*.backup
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+*.tfstate.*.backup
 
 # Crash log files
 crash.log
