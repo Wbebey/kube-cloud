@@ -20,3 +20,20 @@
 #     network = "default"
 #   }
 # }
+
+# Create a Debian VM
+resource "google_compute_instance" "debian_vm" {
+  name         = "debian-vm"
+  machine_type = "e2-standard-2"
+  zone         = "europe-west1-b"
+  boot_disk {
+    initialize_params {
+      image = "debian-cloud/debian-10"
+    }
+  }
+  network_interface {
+    network = "default"
+    access_config {
+    }
+  }
+}

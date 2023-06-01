@@ -15,7 +15,7 @@ terraform {
   #   }
   # }
   backend "gcs" {
-    bucket = "terraform-state"
+    bucket = "terraform-bucket-state-001"
     prefix = "state/"
   }
 }
@@ -24,9 +24,9 @@ terraform {
 #   token = var.terraform-cloud-token
 # }
 
-resource "google_storage_bucket" "terraform-state" {
-  project       = var.gcp-infra-project-id
-  name          = "terraform-state"
+resource "google_storage_bucket" "terraform-bucket-state" {
+  project       = var.gcp-kube-project-id
+  name          = "terraform-bucket-state-001"
   location      = var.gcp-region
   storage_class = "REGIONAL"
 

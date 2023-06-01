@@ -2,17 +2,17 @@ terraform-infrastructure.json
 .terraform
 *.terraform.lock.hcl
 *.iml
-/.idea
-.DS_Store
+**/.idea
+**/.DS_Store
 
 # Local .terraform directories
 **/.terraform/*
 
 # .tfstate files
-*.tfstate
-*.tfstate.*
-*.tfstate.backup
-*.tfstate.*.backup
+#*.tfstate
+#*.tfstate.*
+#*.tfstate.backup
+#*.tfstate.*.backup
 
 # Crash log files
 crash.log

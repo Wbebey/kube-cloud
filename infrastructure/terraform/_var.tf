@@ -21,7 +21,7 @@ variable "gcp-org-id" {
 variable "gcp-kube-project-id" {
   type        = string
   description = "The GCP  project id"
-  sensitive   = true
+  sensitive   = false
 }
 
 variable "gcp-auth-file" {
