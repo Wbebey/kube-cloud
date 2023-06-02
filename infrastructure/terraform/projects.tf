@@ -1,3 +1,4 @@
+### GCP Projects
 
 resource "google_project" "kubi-cloud" {
   name            = "kubi"

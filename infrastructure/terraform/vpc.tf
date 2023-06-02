@@ -1,3 +1,6 @@
+### VPC
+
+# Create a VPC Kube-1
 resource "google_compute_instance" "vm-kube-1" {
   name           = "vm-kube-1"
   machine_type   = "e2-standard-2"
@@ -22,27 +25,4 @@ resource "google_compute_instance" "vm-kube-1" {
       nat_ip = google_compute_address.public-ip-vm-kube-1.address
     }
   }
-}
-
-resource "google_compute_firewall" "application-firewall" {
-  name    = "allow-application-firewall-kube"
-  project = google_project.kubi-cloud.project_id
-  network = "default"
-
-  allow {
-    protocol = "tcp"
-    ports    = ["80", "443"]
-  }
-
-  source_ranges = ["0.0.0.0/0"]
-  target_tags   = ["app"]
-}
-
-
-resource "google_compute_address" "public-ip-vm-kube-1" {
-  project      = google_project.kubi-cloud.project_id
-  name         = "public-ip-vm-kube-1"
-  address_type = "EXTERNAL"
-  region       = var.gcp_region
-  depends_on   = [module.kube-api]
 }
