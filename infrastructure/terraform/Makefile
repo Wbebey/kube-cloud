@@ -4,16 +4,16 @@ SHELL = /bin/bash
 
 prod-init:
 	terraform fmt -write=true -recursive && \
-	terraform init -upgrade
+	doppler run --name-transformer tf-var -- terraform init -upgrade
 
 prod-plan:
 	terraform fmt -write=true -recursive && \
-	terraform init && \
-	terraform plan -var-file=./secrets/kube-cloud/secrets.tfvars 
+	doppler run --name-transformer tf-var -- terraform init && \
+	doppler run --name-transformer tf-var -- terraform plan 
 
 prod-apply:
 	terraform fmt -write=true -recursive && \
-	terraform init && \
-	terraform apply -var-file=./secrets/kube-cloud/secrets.tfvars 
+	doppler run --name-transformer tf-var -- terraform init && \
+	doppler run --name-transformer tf-var -- terraform apply 
 
 .PHONY: prod-init prod-plan prod-apply

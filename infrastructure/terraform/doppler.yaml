@@ -1,0 +1,3 @@
+setup:
+  project: kubi-cloud
+  config: dev

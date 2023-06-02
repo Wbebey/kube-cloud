@@ -1,7 +1,7 @@
 resource "google_compute_instance" "vm-kube-1" {
   name           = "vm-kube-1"
   machine_type   = "e2-standard-2"
-  zone           = "${var.gcp-region}-b"
+  zone           = "${var.gcp_region}-b"
   project        = google_project.kubi-cloud.project_id
   tags           = ["ssh", "app"]
   can_ip_forward = true
@@ -43,6 +43,6 @@ resource "google_compute_address" "public-ip-vm-kube-1" {
   project      = google_project.kubi-cloud.project_id
   name         = "public-ip-vm-kube-1"
   address_type = "EXTERNAL"
-  region       = var.gcp-region
+  region       = var.gcp_region
   depends_on   = [module.kube-api]
 }

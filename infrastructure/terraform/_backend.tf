@@ -21,17 +21,21 @@ terraform {
 }
 
 # credentials "app.terraform.io" {
-#   token = var.terraform-cloud-token
+#   token = var.terraform_cloud_token
 # }
 
 resource "google_storage_bucket" "terraform-bucket-state" {
-  project       = var.gcp-kube-project-id
+  project       = var.gcp_kube_project_id
   name          = "terraform-bucket-state-001"
-  location      = var.gcp-region
+  location      = var.gcp_region
   storage_class = "REGIONAL"
 
   versioning {
     enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = true
   }
 
   labels = {

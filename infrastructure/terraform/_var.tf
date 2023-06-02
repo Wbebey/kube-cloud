@@ -1,36 +1,37 @@
 # Common variables
 
-variable "gcp-region" {
+variable "gcp_region" {
   type        = string
   description = "Default region to use"
   sensitive   = true
 }
 
-variable "gcp-billing-account-id" {
+variable "gcp_billing_account_id" {
   type        = string
   description = "The GCP billing account id"
   sensitive   = true
 }
 
-variable "gcp-org-id" {
+variable "gcp_org_id" {
   type        = string
   description = "The GCP organization id"
   sensitive   = true
 }
 
-variable "gcp-kube-project-id" {
+variable "gcp_kube_project_id" {
   type        = string
   description = "The GCP  project id"
   sensitive   = false
 }
 
-variable "gcp-auth-file" {
-  type        = string
-  description = "GCP authentication file"
-}
-
-variable "terraform-cloud-token" {
+variable "terraform_cloud_token" {
   type        = string
   description = "Terraform Cloud token"
-  # sensitive   = true
+  sensitive   = true
+}
+
+variable "service_account_gcp" {
+  type        = string
+  description = "Service account email"
+  sensitive   = true
 }
