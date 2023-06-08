@@ -1,47 +1,63 @@
 version: '3'
 services:
-  front:
+#  front:
+#    build:
+#      context: ./front
+#      dockerfile: Dockerfile
+#    ports:
+#      - "80:80"
+
+  back:
     build:
-      context: ./front
-      dockerfile: Dockerfile
+        context: ./back
+        dockerfile: Dockerfile
     ports:
-      - "80:80"
+        - "8000:8000"
+  
   mysql:
-    image: mysql:8.0.33
-    restart: always
-    environment:
-      MYSQL_DATABASE: 'db'
-      # So you don't have to use root, but you can if you like
-      MYSQL_USER: 'user'
-      # You can use whatever password you like
-      MYSQL_PASSWORD: 'password'
-      # Password for root access
-      MYSQL_ROOT_PASSWORD: 'password'
-    ports:
-      # <Port exposed> : <MySQL Port running inside container>
-      - '3306:3306'
-    expose:
-        # Opens port 3306 on the container
-      - '3306'
-        # Where our data will be persisted
-    volumes:
-      - my-db:/var/lib/mysql
-  rabbitmq:
-    image: rabbitmq:management
-    container_name: rabbitmq
-    environment:
-      - RABBITMQ_DEFAULT_USER=guest
-      - RABBITMQ_DEFAULT_PASS=guest
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
-    environment:
-      - discovery.type=single-node
-    ports:
-      - "9200:9200"
-      - "9300:9300"
+   image: mysql:8.0
+   restart: unless-stopped
+   environment:
+     MYSQL_DATABASE: 'db' 
+     MYSQL_USER: 'user'
+     MYSQL_PASSWORD: 'password'
+     MYSQL_ROOT_PASSWORD: 'password'
+   ports:
+     # <Port exposed> : <MySQL Port running inside container>
+     - '3306:3306'
+   expose:
+       # Opens port 3306 on the container
+     - '3306'
+       # Where our data will be persisted
+   volumes:
+     - my-db:/var/lib/mysql
+   networks:
+     - default
+
+
+
+
+
+
+
+
+
+#  rabbitmq:
+#    image: rabbitmq:management
+#    container_name: rabbitmq
+#    environment:
+#      - RABBITMQ_DEFAULT_USER=guest
+#      - RABBITMQ_DEFAULT_PASS=guest
+#    ports:
+#      - "5672:5672"
+#      - "15672:15672"
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
+#    environment:
+#      - discovery.type=single-node
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
 
 # Names our volume
 volumes:
