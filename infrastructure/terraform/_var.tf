@@ -35,3 +35,15 @@ variable "service_account_gcp" {
   description = "Service account email"
   sensitive   = true
 }
+
+variable "vm_names" {
+  description = "Names for the VM instances"
+  type        = list(string)
+  default     = ["vm-kube-1"]
+}
+
+variable "machine_types" {
+  description = "Machine types for the VM instances"
+  type        = list(string)
+  default     = ["e2-standard-2"]
+}

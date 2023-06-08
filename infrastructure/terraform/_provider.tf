@@ -7,6 +7,6 @@ terraform {
 }
 
 provider "google" {
-  region = var.gcp_region
+  region      = var.gcp_region
   credentials = var.service_account_gcp
 }

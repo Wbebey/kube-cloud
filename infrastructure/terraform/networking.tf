@@ -1,10 +1,9 @@
 ### Networking
 
-# Create a VPC network for vm-kube-1
-resource "google_compute_address" "public-ip-vm-kube-1" {
-  project      = google_project.kubi-cloud.project_id
-  name         = "public-ip-vm-kube-1"
-  address_type = "EXTERNAL"
-  region       = var.gcp_region
-  depends_on   = [module.kube-api]
+# Create a VPC network
+resource "google_compute_address" "public-ip-vm-kube" {
+  count   = length(var.vm_names)
+  name    = "${var.vm_names[count.index]}-ip"
+  project = google_project.kubi-cloud.project_id
+  region  = var.gcp_region
 }
