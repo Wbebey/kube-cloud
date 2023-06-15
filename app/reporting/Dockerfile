@@ -1,14 +1,17 @@
-# Utilise l'image de base Go
-FROM golang:1.18
+FROM golang:1.18 
 
-# Définit le répertoire de travail à l'intérieur du conteneur
 WORKDIR /app
 
-# Copie les fichiers source de l'application dans le conteneur
+COPY go.mod .
+COPY go.sum .
+RUN go mod download
+
 COPY . .
 
-# Construit l'application Go
 RUN go build -o app
 
-# Définit le point d'entrée de l'application
-CMD ["./app"]
+# Get the script and make it executable
+ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
+RUN chmod +x /wait-for-it.sh
+
+CMD /wait-for-it.sh mysql:3306 -- ./app

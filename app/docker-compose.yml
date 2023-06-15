@@ -17,7 +17,7 @@ services:
       - ./back:/var/www
     entrypoint: /usr/local/bin/entrypoint.sh
     networks:
-     - default
+      - default
     depends_on:
       - mysql
       # - rabbitmq
@@ -35,28 +35,32 @@ services:
 
   
   mysql:
-   image: mysql:8.0
-   restart: unless-stopped
-   environment:
-     MYSQL_DATABASE: 'db' 
-     MYSQL_USER: 'user'
-     MYSQL_PASSWORD: 'password'
-     MYSQL_ROOT_PASSWORD: 'password'
-   ports:
-     - '3306:3306'
-   expose:    
-     - '3306'
-   volumes:
-     - my-db:/var/lib/mysql
-   networks:
-     - default
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: 'db' 
+      MYSQL_USER: 'user'
+      MYSQL_PASSWORD: 'password'
+      MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - '3306:3306'
+    expose:    
+      - '3306'
+    volumes:
+      - my-db:/var/lib/mysql
+    networks:
+      - default
 
   reporting:
     build:
         context: ./reporting
         dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "4000:4000"
+    depends_on:
+      - mysql
+    networks:
+      - default
 
 
   # rabbitmq:

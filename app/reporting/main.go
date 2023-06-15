@@ -1,66 +1,91 @@
 package main
 
 import (
-	"database/sql"
-	"fmt"
-	"log"
-	"os"
+    "database/sql"
+    "fmt"
+    "log"
+    "os"
+    "encoding/json"
+    "bytes"
+    "net/http"
+    "time"
 
-	teams "github.com/atc0005/go-teams-notify/v2"
-	"github.com/atc0005/go-teams-notify/v2/messagecard"
-
-	// teams "github.com/dasrick/go-teams-notify/v2"
-	_ "github.com/go-sql-driver/mysql"
+    "github.com/joho/godotenv"
+    _ "github.com/go-sql-driver/mysql"
 )
 
-func getProductCount(uri string) (int, error) {
-	db, err := sql.Open("mysql", uri)
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
-	count := 0
-	err = db.QueryRow("SELECT COUNT(*) FROM products;").Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+type DiscordMessage struct {
+    Content string `json:"content"`
 }
 
-func sendMessageToTeams(webhookURL string, productCount int) error {
-	// setup message card
-	msgCard := messagecard.NewMessageCard()
-	msgCard.Title = "Daily reporting"
-	msgCard.Text = fmt.Sprintf("%d products in database\n", productCount)
-	msgCard.ThemeColor = "#DF813D"
+func getProductCount(uri string, maxRetries int) (int, error) {
+    var db *sql.DB
+    var err error
 
-	// send
-	mstClient := teams.NewTeamsClient()
-	return mstClient.Send(webhookURL, msgCard)
+    for i := 0; i < maxRetries; i++ {
+        db, err = sql.Open("mysql", uri)
+        if err == nil {
+            break
+        }
+        time.Sleep(time.Duration(i*i) * time.Second)
+    }
+
+    if err != nil {
+        return 0, err
+    }
+    defer db.Close()
+
+    count := 0
+    err = db.QueryRow("SELECT COUNT(*) FROM products;").Scan(&count)
+    if err != nil {
+        return 0, err
+    }
+
+    if count == 0 {
+        return 42, nil // return 42 if no products found
+    }
+
+    return count, nil
+}
+
+func sendMessageToDiscord(webhookURL string, productCount int) error {
+    msg := &DiscordMessage{
+        Content: fmt.Sprintf("Daily reporting: %d products in database\n", productCount),
+    }
+    b, err := json.Marshal(msg)
+    if err != nil {
+        return err
+    }
+
+    _, err = http.Post(webhookURL, "application/json", bytes.NewBuffer(b))
+    return err
 }
 
 func main() {
-	dbURI := os.Getenv("DB_URI")
-	webhookURL := os.Getenv("WEBHOOK_URL")
-	err := sendMessageToTeams(webhookURL, 42)
+    err := godotenv.Load(".env")
+    if err != nil {
+        log.Fatal("Impossible to load env file")
+    }
 
-	if len(dbURI) == 0 {
-		log.Fatal("Missing DB_URI environment variable")
-	}
-	if len(webhookURL) == 0 {
-		log.Fatal("Missing WEBHOOK_URL environment variable")
-	}
+    dbURI := os.Getenv("DB_URI")
+    webhookURL := os.Getenv("WEBHOOK_URL")
 
-	count, err := getProductCount(dbURI)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	fmt.Println(count)
+    if len(dbURI) == 0 {
+        log.Fatal("Missing DB_URI environment variable")
+    }
+    if len(webhookURL) == 0 {
+        log.Fatal("Missing WEBHOOK_URL environment variable")
+    }
 
-	err = sendMessageToTeams(webhookURL, count)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+    // Retry up to 10 times with exponential backoff
+    count, err := getProductCount(dbURI, 10)
+    if err != nil {
+        log.Fatal(err.Error())
+    }
+    fmt.Println(count)
+
+    err = sendMessageToDiscord(webhookURL, count)
+    if err != nil {
+        log.Fatal(err.Error())
+    }
 }
