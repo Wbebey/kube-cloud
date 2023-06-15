@@ -12,7 +12,26 @@ services:
         context: ./back
         dockerfile: Dockerfile
     ports:
-        - "8000:8000"
+        - "9000:9000"
+    volumes:
+      - ./back:/var/www
+    entrypoint: /usr/local/bin/entrypoint.sh
+    networks:
+     - default
+    depends_on:
+      - mysql
+
+  backk-nginx: 
+    image: nginx:1.17-alpine
+    restart: unless-stopped
+    ports:
+      - 8000:80
+    volumes:
+      - ./back:/var/www
+      - ./back/nginx:/etc/nginx/conf.d/
+    networks:
+      - default
+
   
   mysql:
    image: mysql:8.0
@@ -23,12 +42,9 @@ services:
      MYSQL_PASSWORD: 'password'
      MYSQL_ROOT_PASSWORD: 'password'
    ports:
-     # <Port exposed> : <MySQL Port running inside container>
      - '3306:3306'
-   expose:
-       # Opens port 3306 on the container
+   expose:    
      - '3306'
-       # Where our data will be persisted
    volumes:
      - my-db:/var/lib/mysql
    networks:
