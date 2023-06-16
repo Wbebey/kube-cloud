@@ -1,42 +1,78 @@
 version: '3'
 services:
-#  front:
-#    build:
-#      context: ./front
-#      dockerfile: Dockerfile
-#    ports:
-#      - "80:80"
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile
+    container_name: front-angular
+    ports:
+      - "80:80"
+    depends_on:
+      - back
+    networks:
+      - frontend-backend-network
 
   back:
     build:
-        context: ./back
-        dockerfile: Dockerfile
+      context: ./back
+      dockerfile: Dockerfile
+    container_name: back-php
     ports:
         - "9000:9000"
     volumes:
       - ./back:/var/www
-    entrypoint: /usr/local/bin/entrypoint.sh
     networks:
-      - default
+      - frontend-backend-network
+      - backend-nginx-network
+      - indexer-network
     depends_on:
       - mysql
-      # - rabbitmq
+      - rabbitmq
+      - elasticsearch
+      - back-nginx
 
   back-nginx: 
     image: nginx:1.17-alpine
     restart: unless-stopped
+    container_name: nginx
     ports:
       - 8000:80
     volumes:
       - ./back:/var/www
       - ./back/nginx:/etc/nginx/conf.d/
     networks:
-      - default
+      - backend-nginx-network
 
-  
+  reporting:
+    build:
+      context: ./reporting
+      dockerfile: Dockerfile
+    restart: on-failure:5
+    container_name: reporting-golang
+    ports:
+      - "4000:4000"
+    depends_on:
+      - mysql
+    networks:
+      - reporting-network
+
+  indexer:
+    build: ./indexer
+    deploy:
+    restart: on-failure:5
+    container_name: indexer-nodejs
+    ports:
+      - "9090:9090"
+    depends_on:
+      - rabbitmq
+      - elasticsearch
+    networks:
+      - indexer-network
+
   mysql:
     image: mysql:8.0
     restart: unless-stopped
+    container_name: mysql
     environment:
       MYSQL_DATABASE: 'db' 
       MYSQL_USER: 'user'
@@ -49,44 +85,53 @@ services:
     volumes:
       - my-db:/var/lib/mysql
     networks:
-      - default
+      - indexer-network
+      - reporting-network
 
-  reporting:
-    build:
-        context: ./reporting
-        dockerfile: Dockerfile
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
     ports:
-      - "4000:4000"
-    depends_on:
-      - mysql
+      - "5672:5672"
+      - "15672:15672"
     networks:
-      - default
+      - indexer-network
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.9.1
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - indexer-network
 
-  # rabbitmq:
-  #  image: rabbitmq:management
-  #  container_name: rabbitmq
-  #  environment:
-  #    - RABBITMQ_DEFAULT_USER=guest
-  #    - RABBITMQ_DEFAULT_PASS=guest
-  #  ports:
-  #    - "5672:5672"
-  #    - "15672:15672"
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.9.1
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    networks:
+      - indexer-network
+    depends_on:
+      - elasticsearch
 
-
-#  elasticsearch:
-#    image: docker.elastic.co/elasticsearch/elasticsearch:7.5.2
-#    environment:
-#      - discovery.type=single-node
-#    ports:
-#      - "9200:9200"
-#      - "9300:9300"
-
-# Names our volume
 volumes:
   my-db:
 
-
 networks:
-  default:
+  frontend-backend-network:
+    driver: bridge
+  backend-nginx-network:
+    driver: bridge
+  indexer-network:
+    driver: bridge
+  reporting-network:
     driver: bridge

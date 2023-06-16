@@ -1,15 +1,23 @@
-FROM node:14-alpine
+FROM node:18
 
 WORKDIR /app
 
 # Copier les fichiers de l'application
-COPY app.js package.json yarn.lock ./
+COPY . .
 
 # Installer les dépendances
 RUN yarn install
 
-# Exposer un port si nécessaire
-# EXPOSE 3000
+# Fetch the script
+# ADD https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh /wait-for-it.sh
 
-# Démarrer l'application
-CMD ["node", "app.js"]
+# # Make it executable
+# RUN chmod +x /wait-for-it.sh
+
+# Exposer un port si nécessaire
+EXPOSE 9090
+
+
+# Modify your command to wait for RabbitMQ
+# CMD /wait-for-it.sh rabbitmq:5672 -- /wait-for-it.sh elasticsearch:9200 -- npm start
+CMD sleep 10 && npm start

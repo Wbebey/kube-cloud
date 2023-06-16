@@ -1,5 +1,5 @@
 # Stage 1: Construction de l'application
-FROM node:14.20.0 as node
+FROM node:14.20.0 AS node
 WORKDIR /app
 
 # Copier les fichiers de configuration des dépendances
@@ -16,6 +16,8 @@ RUN npm run build --prod
 
 # Stage 2: Serveur HTTP léger
 FROM nginx:alpine
+
+ENV NODE_ENV dev
 
 # Copier les fichiers construits
 COPY --from=node /app/dist/front /usr/share/nginx/html

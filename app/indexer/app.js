@@ -1,18 +1,13 @@
-
+require('dotenv').config();
 const amqp = require('amqplib/callback_api');
 const { Client } = require('@elastic/elasticsearch');
-
-
 
 const amqpUri = process.env['AMQP_URI']
 if (amqpUri == null)
     throw Error('Missing AMQP_URI environment variable.');
 const esUri = process.env['ELASTICSEARCH_URI']
-if (amqpUri == null)
+if (esUri == null)
     throw Error('Missing ELASTICSEARCH_URI environment variable.');
-
-
-
 
 const esClient = new Client({
     node: esUri,
@@ -20,9 +15,6 @@ const esClient = new Client({
     requestTimeout: 5000,
     sniffOnStart: false,
 });
-
-
-
 
 const consumeCreated = async (channel, msg) => {
     try {
@@ -39,13 +31,12 @@ const consumeCreated = async (channel, msg) => {
         channel.ack(msg);
     } catch (err)  {
         console.error(err);
-        channel.nack(msg);
+        channel.nack(msg, false, true);
     }
 }
 
 const consumeDeleted = async (channel, msg) => {
     try {
-        console.log('unindexed product');
         const body = JSON.parse(msg['content'].toString());
         const productId = body['product_id'];
 
@@ -58,21 +49,23 @@ const consumeDeleted = async (channel, msg) => {
         channel.ack(msg);
     } catch (err)  {
         console.error(err);
-        channel.nack(msg);
+        channel.nack(msg, false, true);
     }
 }
 
-
-
-
-
+let conn; // Hold the AMQP connection for clean up
 amqp.connect(amqpUri, function(error0, connection) {
-    if (error0)
-        throw error0;
+    if (error0) {
+        console.error('Cannot establish AMQP connection:', error0);
+        process.exit(1);
+    }
+
+    conn = connection; // Assign to the outer scope variable
 
     connection.createChannel(function(error1, channel) {
         if (error1) {
-            throw error1;
+            console.error('Cannot create channel:', error1);
+            process.exit(1);
         }
 
         const exchangeName = 'product.event';
@@ -99,4 +92,14 @@ amqp.connect(amqpUri, function(error0, connection) {
         channel.bindQueue(queueName2, exchangeName, routingKey2);
         channel.consume(queueName2, (msg) => consumeDeleted(channel, msg));
     });
+});
+
+// On SIGINT/SIGTERM, close connection
+process.on('SIGINT', () => {
+    if (conn) conn.close();
+    process.exit(0);
+});
+process.on('SIGTERM', () => {
+    if (conn) conn.close();
+    process.exit(0);
 });
