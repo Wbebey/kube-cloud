@@ -12,7 +12,7 @@ spec:
     # Name of a secret used to store the ACME account private key
     privateKeySecretRef:
       name: letsencrypt-kubi-cloud
-    # Enable the HTTP-01 challenge provide
+    # Enable the HTTP-01 challenge provider
     solvers:
     - http01:
         ingress:

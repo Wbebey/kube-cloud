@@ -89,8 +89,7 @@ jobs:
             helm install nginx-ingress ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${static_ip} --set controller.service.externalTrafficPolicy=Local
             kubectl delete -A ValidatingWebhookConfiguration nginx-ingress-ingress-nginx-controller-admission
           fi
-          # Update Nginx Controller ConfigMap
-          kubectl apply -f ./gke/${env}/gke-conf/nginx-ingress-configmap.yaml -n default
+          kubectl apply -f nginx-ingress-configmap.yaml -n default
 
       # - uses: ./.github/actions/kube-ip-disable
       
