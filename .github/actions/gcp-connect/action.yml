@@ -13,6 +13,5 @@ runs:
         working-directory:  ${{ env.PROJECT_DIRECTORY }}
         shell: bash
         run: |-
-          export cluster_name=${{ env.CLUSTER_NAME }}
-          export gcp_project_id=${{ env.GCP_PROJECT_ID }}
+          gcloud components install gke-gcloud-auth-plugin
           gcloud container clusters get-credentials kubi-cloud-gke-private  --region europe-west1 --project=kubi-012023 
