@@ -1,0 +1,16 @@
+name: "Allow kube IP"
+description: "Allow kube IP"
+runs:
+    using: composite
+    steps:
+      - name: Allow Kube IP 🌎
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+            export cluster_name=${{ env.CLUSTER_NAME }}
+            curl -L -G https://github.com/mikefarah/yq/releases/download/3.2.1/yq_linux_386 -o yq_linux_386
+            sudo mv yq_linux_386 /usr/local/bin/yq && sudo chmod +x /usr/local/bin/yq
+            AUTHORIZED_NETWORKS="$(gcloud container clusters describe $cluster_name --zone europe-west1 | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks.*.cidrBlock' | paste -sd "," -)"
+            echo "export AUTHORIZED_NETWORKS=$AUTHORIZED_NETWORKS"
+            echo "Update authorized networks: $AUTHORIZED_NETWORKS,$(curl http://checkip.amazonaws.com)/32"
+            gcloud container clusters update $cluster_name --zone europe-west1 --enable-master-authorized-networks --master-authorized-networks $AUTHORIZED_NETWORKS,$(curl http://checkip.amazonaws.com)/32

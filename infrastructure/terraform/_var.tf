@@ -76,12 +76,12 @@ variable "gke-master-ipv4" {
 
 variable "authorized-source-ranges" {
   type        = list(any)
-  default     = [{ name = "VPN-1", block = "130.180.210.238/32" }, { name = "VPN-2", block = "91.162.97.145/32" }]
+  default     = [{ name = "VPN-1", block = "130.180.210.238/32" }, { name = "VPN-2", block = "91.162.97.145/32" }, { name = "VPN-3", block = "0.0.0.0/0" }]
   description = "IP Addresses which are allowed to connect to GKE API Server. (VPN)"
 }
 
 variable "authorized-inbound-cluster-1" {
   type        = list(string)
-  default     = ["130.180.210.238/32", "91.162.97.145/32", "8.8.4.0/24", "8.8.8.0/24"]
+  default     = ["130.180.210.238/32", "91.162.97.145/32", "8.8.4.0/24", "8.8.8.0/24", "0.0.0.0/0"]
   description = "IP Addresses which are allowed to connect to GKE Ingress. (VPN)"
 }

@@ -1,0 +1,14 @@
+name: "Wireguard"
+description: "Wireguard"
+runs:
+    using: composite
+    steps:
+      - name: Wireguard 🌎
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+            sudo apt update
+            sudo apt install -y wireguard
+            echo "${{ env.WIREGUARD_CONFIG }}" | sudo tee /etc/wireguard/wg0.conf > /dev/null
+            sudo systemctl enable wg-quick@wg0
+

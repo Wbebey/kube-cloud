@@ -1,0 +1,12 @@
+name: "Disable kube IP"
+description: "Disable kube IP"
+runs:
+    using: composite
+    steps:
+      - name: Disable Kube IP 🌎
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+            export cluster_name=${{ env.CLUSTER_NAME }}
+            AUTHORIZED_NETWORKS="$(gcloud container clusters describe $cluster_name --zone europe-west1 | yq r - 'masterAuthorizedNetworksConfig.cidrBlocks.*.cidrBlock' | paste -sd "," -)"
+            gcloud container clusters update $cluster_name --zone europe-west1 --enable-master-authorized-networks --master-authorized-networks $AUTHORIZED_NETWORKS

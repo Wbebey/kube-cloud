@@ -1,0 +1,102 @@
+name: Deploy Kube resources
+
+on:
+  push:
+    paths:
+      - infrastructure/gke-conf/**
+  # pull_request:
+  #   types: [labeled]
+  #   branches: [staging]
+  #   paths:
+  #     - infrastructure/gke-conf/**
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Paths to run the workflow on"
+        required: true
+        default: "infrastructure/gke-conf/**"
+
+env:
+  APP: dwaves-api
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PROJECT_DIRECTORY: infrastructure/gke-conf
+  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+  GCP_SA_KEY: ${{ secrets.TF_SA }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  CLUSTER_NAME: ${{  secrets.CLUSTER_NAME }}
+  STATIC_IP: ${{ secrets.STATIC_IP }}
+  # WIREGUARD_CONFIG: ${{ secrets.WIREGUARD_CONFIG }}
+
+defaults:
+  run:
+    working-directory: "infrastructure/gke-conf"
+
+jobs:
+  kubernetes-resources:
+    name: Kubernetes Resources
+    if: github.ref == 'refs/heads/main' 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 😇
+        uses: actions/checkout@v3
+
+      - uses: ./.github/actions/install-tools
+
+      - uses: ./.github/actions/gcp-connect
+
+      # - uses: ./.github/actions/kube-ip-allow
+      # - uses: ./.github/actions/wireguard
+
+      - name: Namespaces Apply
+        run: |-
+          kubectl apply -f namespaces.yaml
+
+
+      - uses: ./.github/actions/helm-install
+
+      - name: cert-manager
+        run: |-
+          export cluster_name=${{ env.CLUSTER_NAME }}
+          helm repo add jetstack https://charts.jetstack.io
+          helm repo update jetstack
+          kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/${cert_manager_version}/cert-manager.crds.yaml
+          if ! helm status cert-manager -n cert-manager > /dev/null 2>&1
+          then
+            helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version ${cert_manager_version} --set global.leaderElection.namespace=cert-manager
+          else
+            status_deployment=$(helm status cert-manager -n cert-manager -o json | jq -r .info.status)
+            if [[ ${status_deployment} == "pending-upgrade" ]]
+            then
+              helm delete cert-manager --namespace cert-manager
+              helm install cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version ${cert_manager_version} --set global.leaderElection.namespace=cert-manager
+            else
+              helm upgrade cert-manager jetstack/cert-manager --namespace cert-manager --create-namespace --version ${cert_manager_version} --set global.leaderElection.namespace=cert-manager
+            fi
+          fi
+
+      - name: Issuer Apply
+        run: |-
+          kubectl apply -f issuer.yaml
+
+      - name: Nginx Apply
+        run: |-
+          export static_ip=${{ env.STATIC_IP }}
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm repo update ingress-nginx
+          if ! helm status nginx-ingress -n default > /dev/null 2>&1
+          then
+            helm install nginx-ingress ingress-nginx/ingress-nginx --set controller.service.loadBalancerIP=${static_ip} --set controller.service.externalTrafficPolicy=Local
+            kubectl delete -A ValidatingWebhookConfiguration nginx-ingress-ingress-nginx-controller-admission
+          fi
+          # Update Nginx Controller ConfigMap
+          kubectl apply -f ./gke/${env}/gke-conf/nginx-ingress-configmap.yaml -n default
+
+      # - uses: ./.github/actions/kube-ip-disable
+      
+      - name: Discord notification on success
+        if: success()
+        uses: ./.github/actions/discord/notification-on-success
+
+      - name: Discord notification on failure
+        if: failure()
+        uses: ./.github/actions/discord/notification-on-failure

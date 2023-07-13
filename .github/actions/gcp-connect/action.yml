@@ -1,0 +1,18 @@
+name: "GCP authentification "
+description: "GCP authentification "
+runs:
+    using: composite
+    steps:
+      - name: GCP authentification 🤑
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          service_account_key: ${{ env.GCP_SA_KEY }}
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: GCP
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+          export cluster_name=${{ env.CLUSTER_NAME }}
+          export gcp_project_id=${{ env.GCP_PROJECT_ID }}
+          gcloud container clusters get-credentials kubi-cloud-gke-private  --region europe-west1 --project=kubi-012023 

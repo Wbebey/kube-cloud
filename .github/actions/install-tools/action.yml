@@ -1,0 +1,11 @@
+name: "install tools to deploy on kube"
+description: "install tools to deploy on kube"
+runs:
+    using: composite
+    steps:
+      - name: Install Kube tools 🌎
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+          curl -LO https://dl.k8s.io/release/v1.23.0/bin/linux/amd64/kubectl
+            sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
