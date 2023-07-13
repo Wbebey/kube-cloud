@@ -1,0 +1,98 @@
+- hosts: all
+  become: true
+  tasks:
+  - name: Install apt-transport-https
+    apt:
+      name: apt-transport-https
+      state: present
+
+  - name: Add Kubernetes apt-key
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+      state: present
+
+  - name: Add Kubernetes Repository
+    apt_repository:
+      repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
+      state: present
+
+  - name: Install Kubernetes
+    apt:
+      name:
+        - kubelet
+        - kubeadm
+        - kubectl
+        - kubernetes-cni
+      state: present
+      update_cache: true
+
+  - name: Configure containerd
+    become: true
+    shell: |
+      mkdir -p /etc/containerd
+      containerd config default | tee /etc/containerd/config.toml
+    args:
+      executable: /bin/bash
+      creates: /etc/containerd/config.toml
+    notify:
+    - Restart containerd
+    register: result
+
+  - name: Restart containerd
+    systemd:
+      state: restarted
+      name: containerd
+    when: result.changed
+
+- hosts: master
+  become: true
+  tasks:
+  - name: Initialize the Kubernetes Cluster
+    shell: kubeadm init --pod-network-cidr=10.244.0.0/16 --cri-socket /run/containerd/containerd.sock > /home/adm.txt
+    args:
+      executable: /bin/bash
+      creates: /etc/kubernetes/manifests/kube-apiserver.yaml
+
+  - name: Create .kube directory
+    file:
+      path: /home/{{ ansible_user }}/.kube
+      state: directory
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: '0755'
+
+  - name: Copy admin.conf to user's kube config
+    copy:
+      src: /etc/kubernetes/admin.conf
+      dest: /home/{{ ansible_user }}/.kube/config
+      remote_src: yes
+      owner: "{{ ansible_user }}"
+      group: "{{ ansible_user }}"
+      mode: '0755'
+
+  - name: Check if Flannel is installed
+    shell: kubectl get pods -n kube-system -l app=flannel | grep flannel
+    register: flannel_check
+    failed_when: false
+    changed_when: false
+    become: true
+    become_user: "{{ ansible_user }}"
+    args:
+      executable: /bin/bash
+
+  - name: Install Flannel
+    shell: kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
+    become: true
+    become_user: "{{ ansible_user }}"
+    args:
+      executable: /bin/bash
+    when: flannel_check.stdout == ""
+
+
+# - hosts: workers
+#   become: yes
+#   tasks:
+#   - name: Join node to cluster
+#     shell: kubeadm join --token <token> <master-ip>:<master-port> --discovery-token-ca-cert-hash sha256:<hash>
+#     args:
+#       executable: /bin/bash

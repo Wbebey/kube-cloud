@@ -39,11 +39,31 @@ variable "service_account_gcp" {
 variable "vm_names" {
   description = "Names for the VM instances"
   type        = list(string)
-  default     = ["vm-kube-1"]
+  default = [
+    "vm-kube-10",
+    "vm-kube-20",
+    "vm-kube-30"
+  ]
 }
 
 variable "machine_types" {
   description = "Machine types for the VM instances"
   type        = list(string)
-  default     = ["e2-standard-2"]
+  default = [
+    "e2-standard-2",
+    "e2-standard-2",
+    "e2-standard-2"
+  ]
+}
+
+variable "ssh_willy" {
+  description = "SSH keys for willy"
+  type        = string
+  sensitive   = true
+}
+
+variable "ssh_mathieu" {
+  description = "SSH keys for mathieu"
+  type        = string
+  sensitive   = true
 }
