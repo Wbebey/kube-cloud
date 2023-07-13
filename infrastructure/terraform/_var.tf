@@ -67,3 +67,21 @@ variable "ssh_mathieu" {
   type        = string
   sensitive   = true
 }
+
+variable "gke-master-ipv4" {
+  type        = string
+  default     = "172.23.0.0/28"
+  description = "Default range IP for ControlPlane GKE"
+}
+
+variable "authorized-source-ranges" {
+  type        = list(any)
+  default     = [{ name = "VPN-1", block = "130.180.210.238/32" }, { name = "VPN-2", block = "91.162.97.145/32" }]
+  description = "IP Addresses which are allowed to connect to GKE API Server. (VPN)"
+}
+
+variable "authorized-inbound-cluster-1" {
+  type        = list(string)
+  default     = ["130.180.210.238/32", "91.162.97.145/32", "8.8.4.0/24", "8.8.8.0/24"]
+  description = "IP Addresses which are allowed to connect to GKE Ingress. (VPN)"
+}
