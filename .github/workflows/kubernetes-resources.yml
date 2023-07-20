@@ -40,9 +40,11 @@ jobs:
       - name: Checkout 😇
         uses: actions/checkout@v3
 
-      - uses: ./.github/actions/install-tools
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
 
-      - uses: ./.github/actions/gcp-connect
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
 
       # - uses: ./.github/actions/kube-ip-allow
       # - uses: ./.github/actions/wireguard
@@ -51,8 +53,8 @@ jobs:
         run: |-
           kubectl apply -f namespaces.yaml
 
-
-      - uses: ./.github/actions/helm-install
+      - name: Helm Install
+        uses: ./.github/actions/helm-install
 
       - name: cert-manager
         run: |-
@@ -81,6 +83,7 @@ jobs:
 
       - name: Nginx Apply
         run: |-
+          echo "static_ip: ${{ env.STATIC_IP }}"
           export static_ip=${{ env.STATIC_IP }}
           helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
           helm repo update ingress-nginx

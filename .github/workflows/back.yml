@@ -1,4 +1,4 @@
-name: Deploy Kube resources
+name: Deploy Backend PHP
 
 on:
   push:
@@ -19,13 +19,13 @@ on:
 env:
   APP: kubi-back
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_SHA: ${{ github.sha }}
   PROJECT_DIRECTORY: app/back
   DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
   GCP_SA_KEY: ${{ secrets.TF_SA }}
   GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   CLUSTER_NAME: ${{  secrets.CLUSTER_NAME }}
   APP_DOPPLER_TOKEN: ${{ secrets.BACKEND_DOPPLER_TOKEN }}
-
 
 defaults:
   run:
@@ -40,9 +40,11 @@ jobs:
       - name: Checkout 😇
         uses: actions/checkout@v3
 
-      - uses: ./.github/actions/install-tools
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
 
-      - uses: ./.github/actions/gcp-connect
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
 
       - name: Build Application 🧪
         uses: ./.github/actions/docker
@@ -60,9 +62,11 @@ jobs:
       - name: Checkout 😇
         uses: actions/checkout@v3
 
-      - uses: ./.github/actions/install-tools
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
 
-      - uses: ./.github/actions/gcp-connect
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
 
       - name: Kube Deploy 🚀
         uses: ./.github/actions/kube-apply

@@ -3,19 +3,29 @@ description: "Build Docker"
 runs:
     using: composite
     steps:
+      - name: Trim variables
+        shell: bash
+        run: |
+          GCP_PROJECT_ID=$(echo "${{ env.GCP_PROJECT_ID }}" | xargs)
+          APP=$(echo "${{ env.APP }}" | xargs)
+          echo "GCP_PROJECT_ID=$GCP_PROJECT_ID" >> $GITHUB_ENV
+          echo "APP=$APP" >> $GITHUB_ENV
+
       - name: Build 🏗
         working-directory:  ${{ env.PROJECT_DIRECTORY }}
         shell: bash
         run: |-
           docker build . \
             -f ${{ GITHUB.WORKSPACE }}/${{ env.PROJECT_DIRECTORY }}/Dockerfile \
-            --build-arg DOPPLER_TOKEN=${{ env.APP_DOPPLER_TOKEN} } \
+            --build-arg DOPPLER_TOKEN=${{ env.APP_DOPPLER_TOKEN }} \
             --build-arg APP=${{ env.APP }} \
             --build-arg ENV_NAME=dev \
-            -t gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA} \
+            -t "gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA}"
 
       - name: Push 🚀
         working-directory: ${{ env.PROJECT_DIRECTORY }}
         shell: bash
         run: |-
-          docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA}
+          gcloud auth configure-docker --quiet
+          export DOCKER_TAG="gcr.io/${GCP_PROJECT_ID}/${APP}:${GITHUB_SHA}"
+          docker push $DOCKER_TAG
