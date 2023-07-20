@@ -8,4 +8,5 @@ runs:
         shell: bash
         run: |-
           sed -i 's|{{ docker_image }}|gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${{ env.GITHUB_SHA }}|g' kube/deployment.yaml
+          cat kube/deployment.yaml
           kubectl apply -f kube/deployment.yaml

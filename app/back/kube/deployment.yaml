@@ -4,7 +4,7 @@ metadata:
   name: back-app-pvc
   namespace: back-private
 spec:
-  storageClassName: manual
+  storageClassName: standard-rwx
   accessModes:
     - ReadWriteOnce
   resources:
