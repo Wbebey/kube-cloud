@@ -1,0 +1,21 @@
+name: "Build Docker"
+description: "Build Docker"
+runs:
+    using: composite
+    steps:
+      - name: Build 🏗
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+          docker build . \
+            -f ${{ GITHUB.WORKSPACE }}/${{ env.PROJECT_DIRECTORY }}/Dockerfile \
+            --build-arg DOPPLER_TOKEN=${{ env.APP_DOPPLER_TOKEN} } \
+            --build-arg APP=${{ env.APP }} \
+            --build-arg ENV_NAME=dev \
+            -t gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA} \
+
+      - name: Push 🚀
+        working-directory: ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+          docker push gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA}

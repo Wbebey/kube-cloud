@@ -1,0 +1,11 @@
+name: "Kube apply"
+description: "Kube apply"
+runs:
+    using: composite
+    steps:
+      - name: Kubernetes apply 
+        working-directory:  ${{ env.PROJECT_DIRECTORY }}
+        shell: bash
+        run: |-
+          sed -i 's|{{ docker_image }}|gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA}|g' kube/deployment.yaml
+          kubectl apply -f kube/deployment.yaml

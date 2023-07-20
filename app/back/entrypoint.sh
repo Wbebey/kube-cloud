@@ -2,10 +2,10 @@
 
 echo "----------->>>>>>>>>>>> Start script"
 
-composer install
+doppler run -- composer install
 
-php artisan migrate --seed --force
+doppler run -- php artisan migrate --seed --force
 
-php-fpm
+doppler run -- php-fpm
 
 
