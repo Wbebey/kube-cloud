@@ -91,43 +91,10 @@ metadata:
   name: back-service
   namespace: back-private
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   selector:
     app: back
   ports:
   - protocol: TCP
-    port: 80
+    port: 8000
     targetPort: 80
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: back-ingress
-  namespace: back-private
-  annotations:
-    cert-manager.io/issuer: "letsencrypt-kubi-cloud"
-    nginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/rewrite-target: /$2$3
-    nginx.ingress.kubernetes.io/proxy-body-size: 16m
-    ginx.ingress.kubernetes.io/use-regex: "true"
-    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
-    nginx.ingress.kubernetes.io/cors-allow-headers: "*"
-    nginx.ingress.kubernetes.io/cors-allow-methods: "*"
-    nginx.ingress.kubernetes.io/cors-allow-origin: "https://back.zdt.fr/*"
-    nginx.ingress.kubernetes.io/enable-cors: "true"
-spec:
-  tls:
-  - hosts:
-    - back.zdt.fr
-    secretName: bi-ingress
-  rules:
-  - host: back.zdt.fr
-    http:
-      paths:
-      - pathType: Prefix
-        path: "/"
-        backend:
-          service:
-            name: back-service
-            port:
-              number: 80
