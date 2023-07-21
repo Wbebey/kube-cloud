@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: indexer-deployment
+  namespace: back-private
+  labels:
+    app: indexer
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: indexer
+  template:
+    metadata:
+      labels:
+        app: indexer
+    spec:
+      containers:
+      - name: indexer
+        image: {{ docker_image }}
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: indexer-service
+  namespace: back-private
+spec:
+  type: LoadBalancer
+  selector:
+    app: indexer
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80

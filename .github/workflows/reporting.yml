@@ -1,0 +1,80 @@
+name: Deploy Reporting GO
+
+on:
+  push:
+    paths:
+      - app/reporting/**
+  # pull_request:
+  #   types: [labeled]
+  #   branches: [staging]
+  #   paths:
+  #     - app/reporting/**
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Paths to run the workflow on"
+        required: true
+        default: "app/reporting/**"
+
+env:
+  APP: kubi-reporting
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GITHUB_SHA: ${{ github.sha }}
+  PROJECT_DIRECTORY: app/reporting
+  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+  GCP_SA_KEY: ${{ secrets.TF_SA }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  CLUSTER_NAME: ${{  secrets.CLUSTER_NAME }}
+  APP_DOPPLER_TOKEN: ${{ secrets.REPORTING_DOPPLER_TOKEN }}
+
+defaults:
+  run:
+    working-directory: "app/reporting"
+
+jobs:
+  build:
+    name: Build & Push
+    if: github.ref == 'refs/heads/main' 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 😇
+        uses: actions/checkout@v3
+
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
+
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
+
+      - name: Build Application 🧪
+        uses: ./.github/actions/docker
+
+      - name: Discord notification on failure
+        if: failure()
+        uses: ./.github/actions/discord/notification-on-failure
+
+  deploy:
+    name: deploy
+    if: github.ref == 'refs/heads/main' 
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout 😇
+        uses: actions/checkout@v3
+
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
+
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
+
+      - name: Kube Deploy 🚀
+        uses: ./.github/actions/kube-apply
+
+      - name: Discord notification on success
+        if: success()
+        uses: ./.github/actions/discord/notification-on-success
+        
+      - name: Discord notification on failure
+        if: failure()
+        uses: ./.github/actions/discord/notification-on-failure
