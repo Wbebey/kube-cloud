@@ -7,6 +7,6 @@ runs:
         working-directory:  ${{ env.PROJECT_DIRECTORY }}
         shell: bash
         run: |-
-          sed -i 's|{{ docker_image }}|gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${{ env.GITHUB_SHA }}|g' kube/deployment.yaml
+          sed -i 's|{{ docker_image }}|gcr.io/kubi-012023/${{ env.APP }}:${{ env.GITHUB_SHA }}|g' kube/deployment.yaml
           cat kube/deployment.yaml
           kubectl apply -f kube/deployment.yaml

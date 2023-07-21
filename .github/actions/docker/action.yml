@@ -20,12 +20,12 @@ runs:
             --build-arg DOPPLER_TOKEN=${{ env.APP_DOPPLER_TOKEN }} \
             --build-arg APP=${{ env.APP }} \
             --build-arg ENV_NAME=dev \
-            -t "gcr.io/${{ env.GCP_PROJECT_ID }}/${{ env.APP }}:${GITHUB_SHA}"
+            -t "gcr.io/kubi-012023/${{ env.APP }}:${GITHUB_SHA}"
 
       - name: Push 🚀
         working-directory: ${{ env.PROJECT_DIRECTORY }}
         shell: bash
         run: |-
           gcloud auth configure-docker --quiet
-          export DOCKER_TAG="gcr.io/${GCP_PROJECT_ID}/${APP}:${GITHUB_SHA}"
+          export DOCKER_TAG="gcr.io/kubi-012023/${APP}:${GITHUB_SHA}"
           docker push $DOCKER_TAG
