@@ -1,0 +1,61 @@
+name: Deploy Mysql
+
+on:
+  push:
+    paths:
+      - app/mysql/**
+  # pull_request:
+  #   types: [labeled]
+  #   branches: [staging]
+  #   paths:
+  #     - app/mysql/**
+  workflow_dispatch:
+    inputs:
+      paths:
+        description: "Paths to run the workflow on"
+        required: true
+        default: "app/mysql/**"
+
+env:
+  APP: kubi-mysql
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  PROJECT_DIRECTORY: app/mysql
+  DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+  GCP_SA_KEY: ${{ secrets.TF_SA }}
+  GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  CLUSTER_NAME: ${{  secrets.CLUSTER_NAME }}
+
+defaults:
+  run:
+    working-directory: "app/mysql"
+
+jobs:
+  deploy:
+    name: deploy
+    if: github.ref == 'refs/heads/main' 
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 😇
+        uses: actions/checkout@v3
+
+      - name: Deployment Started 
+        run: |
+          echo "Deployment Started"
+
+      - name: Install tools 🛠
+        uses: ./.github/actions/install-tools
+
+      - name: GCP Connect 🔌
+        uses: ./.github/actions/gcp-connect
+
+      - name: Kube Deploy 🚀
+        run : |
+          kubectl apply -f kube/deployment.yaml
+
+      - name: Discord notification on success
+        if: success()
+        uses: ./.github/actions/discord/notification-on-success
+        
+      - name: Discord notification on failure
+        if: failure()
+        uses: ./.github/actions/discord/notification-on-failure
